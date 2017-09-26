@@ -3,16 +3,19 @@ from time import time, sleep
 from secret import BITTREX_KEY, BITTREX_SECRET, EMAIL_HOST, EMAIL_USER, EMAIL_PASS, EMAIL_FROM, EMAIL_TO
 import smtplib
 
-server = smtplib.SMTP(EMAIL_HOST, 587)
-server.starttls()
-server.login(EMAIL_USER, EMAIL_PASS)
 
-msg_sub = 'Subject: Bittrex mail notification\r\n'
-msg_header = ("From: %s\r\nTo: %s\r\n\r\n" % (EMAIL_FROM, EMAIL_TO))
-msg_body = "Bittrex notification: "
-msg = msg_sub + msg_header + msg_body
+def sendemail( msgsub, msg_body ):
+	server = smtplib.SMTP(EMAIL_HOST, 587)
+	server.starttls()
+	server.login(EMAIL_USER, EMAIL_PASS)
+	
+	msg_sub = 'Subject: Bittrex Mail Notification: ' + msgsub + '\r\n'
+	msg_header = ("From: %s\r\nTo: %s\r\n\r\n" % (EMAIL_FROM, EMAIL_TO))
+	msg = msg_sub + msg_header + msg_body
+	
+	server.sendmail(EMAIL_FROM, EMAIL_TO, msg)
+	server.quit()
 
-server.sendmail(EMAIL_FROM, EMAIL_TO, msg + " start observer")
 
 LOOP_SLEEP_TIME = 15
 
@@ -24,8 +27,7 @@ exchange = Bittrex(
 first_run = True
 orders_present = {}
 
-# push = pb.push_note('App started', 'Bittrex notification started')
-
+sendemail("start observer", "the Bittrex Mail Notification observer has been started")
 while True:
     loop_start_time = time()
     orders_to_notify = []
@@ -57,10 +59,9 @@ while True:
             order_type = to_notify['OrderType']
             limit = to_notify['Limit']
             note_to_push += '%s : %s : %s' % (ex, order_type, limit)
-            note_to_push += '\n'
+#            note_to_push += '\n'
         print(note_to_push)
-        server.sendmail(EMAIL_FROM, EMAIL_TO, msg + note_to_push)
-#        pb.push_note('Order moved!', note_to_push)
+        sendemail(note_to_push, str(to_notify))
 
     # Reset orders_present to the current list
     orders_present = {order['OrderUuid']: order for order in orders_current}
@@ -71,4 +72,3 @@ while True:
     remaining_time = LOOP_SLEEP_TIME - (loop_end_time - loop_start_time)
     sleep(max(0, remaining_time))
 
-server.quit()
