@@ -17,6 +17,19 @@ def sendemail( msgsub, msg_body ):
 	server.quit()
 
 
+def ordertostring( order ):
+	str = ''
+	str += 'Exchange: ' + order['Exchange'] + '\r\n'
+	str += 'OrderType: ' + order['OrderType'] + '\r\n'
+	str += 'Limit: ' + "%.10f" % order['Limit'] + '\r\n'
+	str += 'QuantityRemaining: ' + "%.10f" % order['QuantityRemaining'] + '\r\n'
+	str += 'Quantity: ' + "%.10f" % order['Quantity'] + '\r\n'
+	str += 'Price: ' + "%.10f" % order['Price'] + '\r\n'
+	str += 'Opened: ' + order['Opened'] + '\r\n'
+	str += '\r\n'
+	#str += str(order)
+	return str
+
 LOOP_SLEEP_TIME = 15
 
 #pb = PushBullet(api_key=PUSHBULLET_API)
@@ -32,7 +45,12 @@ while True:
     loop_start_time = time()
     orders_to_notify = []
 
-    orders_current = exchange.get_open_orders()['result']
+    try:
+        orders_current = exchange.get_open_orders()['result']
+    except exchange.exceptions.ReadTimeout:
+        print("read timeout\n")
+	continue
+
     if first_run:
         for order in orders_current:
             orders_present[order['OrderUuid']] = order
@@ -61,7 +79,7 @@ while True:
             note_to_push += '%s : %s : %s' % (ex, order_type, limit)
 #            note_to_push += '\n'
         print(note_to_push)
-        sendemail(note_to_push, str(to_notify))
+        sendemail(note_to_push, ordertostring(to_notify))
 
     # Reset orders_present to the current list
     orders_present = {order['OrderUuid']: order for order in orders_current}
