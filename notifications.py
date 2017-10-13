@@ -47,8 +47,8 @@ while True:
 
     try:
         orders_current = exchange.get_open_orders()['result']
-    except exchange.exceptions.ReadTimeout:
-        print("read timeout\n")
+    except:
+        print("catch exception from read orders\n")
 	continue
 
     if first_run:
@@ -57,8 +57,12 @@ while True:
         first_run = False
         continue
 
+    try:
     # Build list of uuids present in orders
-    order_uuids = [order['OrderUuid'] for order in orders_current]
+        order_uuids = [order['OrderUuid'] for order in orders_current]
+    except:
+        print("catch exception while parse orders")
+        continue
 
     # Check if all uuids in orders_present are present in orders
     for uuid in orders_present.keys():
