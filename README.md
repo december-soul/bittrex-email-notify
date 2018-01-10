@@ -17,3 +17,6 @@ EMAIL_TO = 'myinform@gmx.de'
 ```
 
 Run the script with `python notifications.py`.
+
+# Docker
+I offer a docker file for the raspberry pi. Change it if you want to run it on another system
